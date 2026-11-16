@@ -1,0 +1,409 @@
+Reinforcement Learning: Multi-Armed Bandits and Markov Chain Simulations
+================
+Paul Sanyang
+February 2024
+
+- [Introduction](#introduction)
+- [Multi-Armed Bandit Experiments](#multi-armed-bandit-experiments)
+  - [Epsilon-Greedy Bandit
+    Implementation](#epsilon-greedy-bandit-implementation)
+  - [Experimental Setup and
+    Simulation](#experimental-setup-and-simulation)
+  - [Average Reward and Optimal Action
+    Plots](#average-reward-and-optimal-action-plots)
+- [Markov Chain Simulation](#markov-chain-simulation)
+  - [Simulating a Three-State Markov
+    Chain](#simulating-a-three-state-markov-chain)
+  - [Stationary Distribution](#stationary-distribution)
+  - [Empirical State Frequencies](#empirical-state-frequencies)
+  - [Comparing Theoretical and Empirical
+    Results](#comparing-theoretical-and-empirical-results)
+- [Conclusion](#conclusion)
+
+## Introduction
+
+Reinforcement learning studies how an agent learns to make decisions
+through interactions with an environment, with the objective of
+maximizing cumulative rewards. One of its fundamental challenges is the
+exploration–exploitation trade-off: deciding whether to select actions
+that have previously produced favorable outcomes or explore alternatives
+that may lead to better rewards.
+
+This project investigates this trade-off through computational
+experiments involving the $`k`$-armed bandit problem, following the
+experimental framework presented in Section 2.3 of Sutton and Barto’s
+*Reinforcement Learning: An Introduction* (2nd edition). Using R, we
+implement an $`\epsilon`$-greedy action-selection strategy and examine
+its performance under different exploration probabilities. The
+experiments involve 10-armed bandits, 2,000 independent runs, and 1,000
+time steps per run. Performance is evaluated using average rewards and
+the percentage of optimal actions selected.
+
+The second part of the project focuses on discrete-time Markov chains,
+which provide a mathematical framework for modeling stochastic
+transitions between states. We simulate a three-state Markov chain,
+investigate its long-run behavior, and compute its stationary
+distribution. The theoretical stationary probabilities are then compared
+with empirical state frequencies obtained from simulation.
+
+Together, these experiments illustrate important connections between
+stochastic processes, computational simulation, and sequential
+decision-making.
+
+## Multi-Armed Bandit Experiments
+
+### Epsilon-Greedy Bandit Implementation
+
+The `kArmedTestbed` function simulates a 10-armed bandit testbed with a
+specified exploration probability ($`\epsilon`$). It returns the
+expected rewards for each arm, the rewards obtained and the selected
+actions at each time over multiple plays.
+
+``` r
+####################################################################################
+
+k = 10 # the number of armed bandits in the experiment,  10-armed Testbed
+epsilon = 0.2 # a real number between 0 and 1 representing the probability
+ # of selecting a random action at a given step in an -greedy strategy
+nplays = 2000 # the number of plays in a given run (i.e.
+# the number of bandit drawn in the run)
+
+#The function kArmedTestbed should take as inputs
+kArmedTestbed <- function(k, nplays, epsilon, theseed){
+ 
+# an integer representing the random seed used to ensure reproducibility 
+  # of you simulation results
+  set.seed(theseed)
+ 
+#• First element:
+muvec=rnorm(k,0,1)#a vector of length k containing the simulated
+# expected reward for each arm in the run.
+
+# Second element:
+estimvec=rep(0,k) # a vector of length nplays containing the reward obtained at each
+# time step from time t = 1 to t = nplays.
+
+action_counts=integer(k) # number of times each arm has been selected
+
+Rewardvec=vector(length=nplays)  # reward at time t
+
+# Third element: Actionvec
+Actionvec=vector(length=nplays) # a vector of length nplays containing 
+# the action performed
+# (i.e. the selected arm) at each time step from time t = 1 to t = nplays.
+ 
+
+# The function the kArmedTestbed function. With seed of 2000.
+  for (t in 1:nplays){
+    if(runif(1)<epsilon){ # explore
+      Actionvec[t]=sample(c(1:k),1)
+      Rewardvec[t]=rnorm(1,muvec[Actionvec[t]],1)
+    }else{ # explotation  
+      Actionvec[t]=which.max(estimvec)
+      Rewardvec[t]=rnorm(1,muvec[Actionvec[t]],1)
+    }
+    # update
+    chosen_arm <- Actionvec[t]
+    action_counts[chosen_arm] <- action_counts[chosen_arm] + 1
+    estimvec[chosen_arm] <- estimvec[chosen_arm] +
+      (Rewardvec[t] - estimvec[chosen_arm]) / action_counts[chosen_arm]
+  }
+ 
+  result_list=list(muvec,Rewardvec,Actionvec)
+  return(result_list)
+}
+
+kArmedTestbed(10,10,.3,2000)
+```
+
+    ## [[1]]
+    ##  [1] -0.8538432 -0.3528894  0.8901495  1.7412867  0.9160783 -1.1766014
+    ##  [7] -1.9384381  2.0943785  0.2254749  1.1762761
+    ## 
+    ## [[2]]
+    ##  [1]  0.48615196  0.49544338 -0.04516112 -0.27740187 -0.52202917 -1.06036050
+    ##  [7] -1.83110552  1.91010542  3.09223711 -0.29143585
+    ## 
+    ## [[3]]
+    ##  [1]  1  1  1  3  1  1  2 10 10 10
+
+### Experimental Setup and Simulation
+
+Here, we compute the average reward and the percentage of optimal
+actions for three different values of exploration probability
+($`\epsilon`$). We iterated over 2000 runs of the multi-armed bandit
+testbed, collecting results for each run with exploration probabilities
+of 0, 0.01, and 0.1. The results are stored in matrices
+`AvgRewardAllepsi` and `PercOptimalAllepsi`, where each row corresponds
+to a different exploration probability
+
+``` r
+## Definition of matrices
+AvgRewardAllepsi=matrix(0,nrow=3,ncol=1000)
+PercOptimalAllepsi=matrix(0,nrow=3,ncol=1000)
+
+for (i in 1:2000){
+Savelist1=kArmedTestbed(10,1000,0,i)
+Savelist2=kArmedTestbed(10,1000,.01,i)
+Savelist3=kArmedTestbed(10,1000,.1,i)
+ 
+AvgRewardAllepsi[1,]=AvgRewardAllepsi[1,]+(1/2000)*Savelist1[[2]]  
+AvgRewardAllepsi[2,]=AvgRewardAllepsi[2,]+(1/2000)*Savelist2[[2]]
+AvgRewardAllepsi[3,]=AvgRewardAllepsi[3,]+(1/2000)*Savelist3[[2]]
+
+  PercOptimalAllepsi[1,]=PercOptimalAllepsi[1,]+
+    (1/2000)*sapply(which.max(Savelist1[[1]])==Savelist1[[3]],as.numeric)
+  PercOptimalAllepsi[2,]=PercOptimalAllepsi[2,]+
+    (1/2000)*sapply(which.max(Savelist2[[1]])==Savelist2[[3]],as.numeric)
+  PercOptimalAllepsi[3,]=PercOptimalAllepsi[3,]+
+    (1/2000)*sapply(which.max(Savelist3[[1]])==Savelist3[[3]],as.numeric)
+}
+```
+
+### Average Reward and Optimal Action Plots
+
+``` r
+# Plotting the curves representing average reward obtained across all 2000
+# runs at each respective stage versus the stage itself.
+
+plot.ts(AvgRewardAllepsi[1,],ylim=c(0,1.4),col="darkgreen",ylab="Average reward",
+        xlab="Steps", main= "Performance assessment in the 10-armed testbed")
+lines(AvgRewardAllepsi[2,],col="red")#AvgRewardAllepsi matrix from part (b) 
+lines(AvgRewardAllepsi[3,],col="blue") 
+legend(100, .75, legend=c(expression(paste(epsilon," = 0"),
+                                     paste(epsilon," = 0.01"),
+                                     paste(epsilon," = 0.1"))),
+       col=c("darkgreen","red", "blue"),lty=1,bty="n")
+```
+
+![](01-Multi-Armed-Bandits-and-Markov-Chains-Simulations_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+# Ploting the figure representing the percentage of runs across all 2000
+# runs that the optimal action was selected at each respective 
+# stage versus the stage itself.  
+
+
+plot.ts(PercOptimalAllepsi[1,]*100,ylim=c(0,80),col="darkgreen",ylab="% Optimal action",
+        xlab="Steps", main= "Performance assessment in the 10-armed testbed")
+lines(PercOptimalAllepsi[2,]*100,col="red") # Using PercOptimalAllepsi matrix
+ #Ploting three curves epsilon = 0 (dark greencolor), epsilon = 0:01 (red color)
+# and epsilon = 0:1 (blue color).
+lines(PercOptimalAllepsi[3,]*100,col="blue")
+# Include legends to identify the three curves in the plot.
+legend(100, 35, legend=c(expression(paste(epsilon," = 0"),
+                                     paste(epsilon," = 0.01"),
+                                     paste(epsilon," = 0.1"))),
+       col=c("darkgreen","red", "blue"), lty=1, bty="n")
+```
+
+![](01-Multi-Armed-Bandits-and-Markov-Chains-Simulations_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+\### Interpretation of Bandit Results With varying epsilon values, we
+observed distinct patterns in exploration and exploitation strategies.
+The epsilon-greedy approach with epsilon($`\epsilon`$) = 0 solely
+exploits known high-reward options, resulting in consistent but limited
+performance in the long run. In contrast, epsilon($`\epsilon`$) values
+of 0.01 and 0.1 balance exploration and exploitation, First, we saw
+quick improvements, with different long-run outcomes in these
+experiments. While epsilon($`\epsilon`$) = 0.1 initially outperforms
+epsilon($`\epsilon`$) = 0.01 due to its stronger emphasis on
+exploration, the latter gradually almost catches up just right before
+the 1000th step, suggesting potential superiority in extended learning
+scenarios. This detailed understanding shows how important epsilon is
+for deciding when to try new things and when to stick with what’s
+already known. It helps us design better agents that can learn and make
+decisions well in all sorts of situations
+
+## Markov Chain Simulation
+
+### Simulating a Three-State Markov Chain
+
+Here, we simulate the behavior of a Markov chain, a stochastic process
+where the future state depends only on the current state, not on the
+past. The transition matrix defines the probabilities of moving between
+states, and simulation iterates through time steps, we sampled the next
+state based on the current state and transition probabilities. The
+resulting trajectory illustrates how the system evolves over time.
+
+``` r
+# Load Matrix library
+# Base R is sufficient for this simulation.
+set.seed(2024)
+
+# Define transition matrix
+transition_matrix <- matrix(c(0.2, 0.7, 0.1,
+                               0.3, 0.5, 0.2,
+                               0.1, 0.1, 0.8), nrow = 3, byrow = TRUE)
+
+# Initial state probability vector
+current_state <- c(1, 0, 0)
+
+# Number of time steps
+num_steps <- 500
+
+# Lists to store trajectory
+trajectory <- c()
+
+# Iterate through time steps
+for (t in 1:num_steps) {
+  # Sample next state based on current state and transition matrix from 
+  # a multinomial distribution
+  next_state <- which.max(rmultinom(1, size = 1, 
+                                    prob = current_state %*% transition_matrix))
+  
+  # Update current state
+  current_state <- diag(3)[next_state, ]
+  
+  # Append current state to trajectory
+  trajectory <- c(trajectory, next_state)  # Adding 1 to match state numbering
+}
+
+# Plot trajectory
+plot(trajectory, type = 'l', xlab = 'Time Step', ylab = 'State', 
+     main = 'Trajectory of Transition Matrix')
+```
+
+![](01-Multi-Armed-Bandits-and-Markov-Chains-Simulations_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+### Stationary Distribution
+
+For the transition matrix $`P`$, the stationary distribution
+$`\pi=(\pi_1,\pi_2,\pi_3)`$ satisfies $`\pi P=\pi`$ and
+$`\sum_i\pi_i=1`$. We approximate it by computing successive powers of
+$`P`$ until they converge.
+
+``` r
+# this code iteratively updates a transition matrix until it converges within a 
+# certain tolerance we called epsilon_new (2.220446e-16)) and then prints the 
+# converged matrix.If the Markov chain has a steady state, then it will converge
+# to the steady state matrix and each row of that matrix is the equilibrium
+# vector
+
+
+# set epsilon
+epsilon_new <- 1e-12
+
+# transition_matrix_n_1 is the transition matrix at time n-1
+# transition_matrix_n <- is the transition matrix at time n
+
+# Copy the transition matrix
+transition_matrix_n_1 <- transition_matrix 
+                                         
+
+# Iterate until convergence
+for (iteration in seq_len(10000)) {
+  # Compute the next transition matrix transition_matrix_n
+  transition_matrix_n <- transition_matrix_n_1 %*% transition_matrix
+  
+  # Check for convergence
+  if (all(abs(transition_matrix_n_1 - transition_matrix_n) <= epsilon_new)) {
+    break
+  }
+  
+  # Update transition_matrix_n_1
+  transition_matrix_n_1 <- transition_matrix_n
+  if (iteration == 10000) warning("Stationary matrix iteration did not converge")
+}
+
+# print out the steady state of the transition matrix 
+print("Steady state matrix")
+```
+
+    ## [1] "Steady state matrix"
+
+``` r
+print(transition_matrix_n)
+```
+
+    ##           [,1]      [,2]     [,3]
+    ## [1,] 0.1904762 0.3571429 0.452381
+    ## [2,] 0.1904762 0.3571429 0.452381
+    ## [3,] 0.1904762 0.3571429 0.452381
+
+``` r
+cat("\n")
+```
+
+``` r
+# equilibrium distribution has reached and these are the theoretical
+# All the rows of of the steady state of the transition matrix are 
+# equal. So we just select one of the rows to be the equilibrium vector
+
+# value of $\pi_{1}, \pi_{2}, \pi_{3}$
+equilibrium_dist_long_run <- transition_matrix_n[1,] 
+
+print("Equilibrium distribution in the long run")
+```
+
+    ## [1] "Equilibrium distribution in the long run"
+
+``` r
+# Print the equilibrium distribution
+cat("Equilibrium distribution:", equilibrium_dist_long_run, sep =" ")
+```
+
+    ## Equilibrium distribution: 0.1904762 0.3571429 0.452381
+
+The rows of the matrix above represent the steady states of the
+transition matrix. Additionally, it is evident from the matrix that all
+rows are identical. The theoretical values are as follows,
+$`\pi_{1}=0.1904762`$, $`\pi_{2}=0.3571429`$, $`\pi_{3}=0.452381`$.
+These theoretical values show that in the long run, the chance of being
+in State 1 is about $`19\%`$, in State 2 it’s about $`36\%`$, and in
+State 3 it’s about $`45\%`$. This indicates that, over time, the system
+tends to spend more time in State 3 compared to the other states.
+
+### Empirical State Frequencies
+
+From the simulated Markov chain in (a), we record the state transitions
+over a large number of steps.
+
+``` r
+# Calculate percentage of time spent in each state
+percentage_state1 <- sum(trajectory == 1) / num_steps * 100
+percentage_state2 <- sum(trajectory == 2) / num_steps * 100
+percentage_state3 <- sum(trajectory == 3) / num_steps * 100
+
+# Print the percentage of time spent in each state
+print("Percentage of time spent in each state")
+```
+
+    ## [1] "Percentage of time spent in each state"
+
+``` r
+# Print percentage of time spent in each state
+cat(sprintf("Percentage of time spent in state 1: %.2f%%\n", percentage_state1))
+```
+
+    ## Percentage of time spent in state 1: 20.80%
+
+``` r
+cat(sprintf("Percentage of time spent in state 2: %.2f%%\n", percentage_state2))
+```
+
+    ## Percentage of time spent in state 2: 36.60%
+
+``` r
+cat(sprintf("Percentage of time spent in state 3: %.2f%%\n", percentage_state3))
+```
+
+    ## Percentage of time spent in state 3: 42.60%
+
+### Comparing Theoretical and Empirical Results
+
+The simulated percentages printed above can be compared with the
+stationary probabilities ($`19.05%`$, $`35.71%`$, and $`45.24%`$). With
+a finite trajectory of 500 steps, some sampling variation is expected.
+
+## Conclusion
+
+In conclusion, we explored the exploration-exploitation trade-off in
+reinforcement learning through the analysis of different epsilon values
+in k-armed bandit problems. Our findings highlighted the importance of
+balancing exploration and exploitation for optimal long-term
+performance. We also looked at the theoretical and practical aspects of
+Markov chains. By analyzing the equilibrium values of
+$`\pi_{1}, \pi_{2},`$ and $`\pi_{3}`$, we gained insights into the
+long-term behaviour of the system. Furthermore, our simulation of a
+Markov chain trajectory highlighted the practical application of
+theoretical concepts.
