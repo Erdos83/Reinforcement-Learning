@@ -23,7 +23,7 @@ This project investigates the exploration–exploitation trade-off through the \
 - Analysis of average rewards and optimal action selection.
 - Simulation of a three-state Markov chain and computation of its stationary distribution.
 
-[View Project 1](01-Multi-Armed-Bandits-and-Markov-Chains/)
+[View Project 1](01-Multi-Armed-Bandits-and-Markov-Chains%20Simulations/)
 
 ### 2. Markov Decision Processes, Monte Carlo Methods, and Importance Sampling
 
