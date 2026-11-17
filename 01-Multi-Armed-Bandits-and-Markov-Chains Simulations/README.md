@@ -13,18 +13,12 @@ An R-based computational study of epsilon-greedy action selection and finite-sta
 
 **Three-state Markov chain:** Simulate 500 state transitions, approximate the stationary distribution and compare it with observed state frequencies.
 
-## Reproduce the report
+### Reproduce the report
 
-1. Open `assignment-01/assignment-01.Rmd` in RStudio.
-2. Install the R packages `rmarkdown` and `knitr` if needed: `install.packages(c("rmarkdown", "knitr"))`.
-3. Choose **Knit** to produce `assignment-01.md` and its accompanying figure directory.
-4. Commit the generated Markdown **and** figure directory alongside the `.Rmd` source so the plots display on GitHub.
-
-The R code uses base R. The generated report is not included in this initial source bundle because it must be knitted in an R environment.
-
-## Attribution
-
-Original coursework was completed collaboratively by Criscent Birungi, Paul Sanyang, and Samaneh Sami Kermani at Concordia University. This repository presents an edited, GitHub-oriented version. Please respect the contributions and rights of all collaborators.
+1. Open `reinforcement-learning.Rmd` in RStudio.
+2. Install the required packages if needed: `install.packages(c("rmarkdown", "knitr"))`.
+3. Click **Knit** to generate the Markdown report and accompanying figures.
+4. Review the generated files and commit the report and figures to GitHub.
 
 ## Reference
 
