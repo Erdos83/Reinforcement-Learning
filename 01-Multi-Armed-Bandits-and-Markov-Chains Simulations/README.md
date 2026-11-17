@@ -4,8 +4,11 @@ An R-based computational study of epsilon-greedy action selection and finite-sta
 
 ## Explore the project
 
-- [View the R Markdown source](reinforcement-learning.Rmd)
-- [View the rendered report](reinforcement-learning.md)
+
+## Explore the project
+- [View the R Markdown source](01-Multi-Armed-Bandits-and-Markov-Chains%20Simulations.Rmd)
+- [View the rendered report](01-Multi-Armed-Bandits-and-Markov-Chains-Simulations.md)
+
 
 
 ## Experiments
