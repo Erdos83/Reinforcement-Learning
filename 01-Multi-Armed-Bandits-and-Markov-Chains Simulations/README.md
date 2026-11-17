@@ -1,9 +1,6 @@
 # Reinforcement Learning: Multi-Armed Bandits and Markov Chains
 
-An R-based computational study of epsilon-greedy action selection and finite-state Markov chains, originally developed as coursework in February 2024.
-
-## Explore the project
-
+An R-based computational study of epsilon-greedy action selection and finite-state Markov chains
 
 ## Explore the project
 - [View the R Markdown source](01-Multi-Armed-Bandits-and-Markov-Chains%20Simulations.Rmd)
