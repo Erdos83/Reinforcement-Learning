@@ -24,6 +24,10 @@ An R-based computational study of epsilon-greedy action selection and finite-sta
 3. Click **Knit** to generate the Markdown report and accompanying figures.
 4. Review the generated files and commit the report and figures to GitHub.
 
+5. ## Attribution
+
+Project completed collaboratively by  Paul Sanyang, Criscent Birungi and Samaneh Sami Kermani at Concordia University. This repository presents an edited, GitHub-oriented version. Please respect the contributions and rights of all collaborators.
+
 ## Reference
 
 Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press.
